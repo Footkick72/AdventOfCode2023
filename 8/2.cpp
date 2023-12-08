@@ -60,7 +60,7 @@ int main() {
             }
             instruct = (instruct + 1) % instructions.size();
         }
-        cout << i << endl;
+        // cout << i << endl;
         ans = lcm(ans, i);
     }
     cout << ans << endl;
