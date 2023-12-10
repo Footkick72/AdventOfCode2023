@@ -12,29 +12,35 @@ struct Pipe {
     Pipe(char t, int i, int j) : type(t), i(i), j(j), n(nullptr), s(nullptr), e(nullptr), w(nullptr) {};
 };
 
-pair<bool, vector<Pipe*>> getloop(Pipe* start, Pipe* next) {
+pair<bool, pair<vector<Pipe*>,int>> getloop(Pipe* start, Pipe* next) {
     assert(start && next);
     Pipe* p = next;
     vector<Pipe*> path = {start};
+    int y = 0;
+    int area = 0;
     while (p != start || path.size() == 0) {
         if (p->n && p->n->s && p->n != path.back()) {
             path.push_back(p);
             p = p->n;
+            y--;
         } else if (p->s && p->s->n && p->s != path.back()) {
             path.push_back(p);
             p = p->s;
+            y++;
         } else if (p->e && p->e->w && p->e != path.back()) {
             path.push_back(p);
+            area -= y;
             p = p->e;
         } else if (p->w && p->w->e && p->w != path.back()) {
             path.push_back(p);
+            area += y;
             p = p->w;
         } else {
             // dead end, initial start route wasn't correct
-            return {false, path};
+            return {false, {path, abs(area)}};
         }
     }
-    return {true, path};
+    return {true, {path, abs(area)}};
 }
 
 int main() {
@@ -98,15 +104,7 @@ int main() {
         if (startpipe == n->n || startpipe == n->e || startpipe == n->s || startpipe == n->w) {
             auto p = getloop(startpipe,n);
             if (p.first) {
-                auto path = p.second;
-                int area = 0;
-                for (int i = 0; i < path.size(); i++) {
-                    int j = (i+1)%path.size();
-                    auto p0 = path[i];
-                    auto p1 = path[j];
-                    area += p1->i*p0->j - p0->i*p1->j;
-                }
-                area = abs(area)/2;
+                auto [path, area] = p.second;
                 cout << area - path.size()/2 + 1 << endl;
                 break;
             }
