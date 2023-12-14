@@ -1,11 +1,19 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 using namespace std;
 
-long long solve(map<pair<int,int>, long long> &hash, string &record, int r_i, vector<int> &groups, int g_i) {
+struct PairHash {
+    size_t operator () (const pair<int, int>& p) const {
+        auto h1 = hash<int>{}(p.first);
+        auto h2 = hash<int>{}(p.second);
+        return h1 ^ h2;
+    }
+};
+
+long solve(unordered_map<pair<int,int>, long, PairHash> &hash, string &record, int r_i, vector<int> &groups, int g_i) {
     while (r_i < record.size() && record[r_i] == '.') {
         r_i++;
     }
@@ -23,7 +31,7 @@ long long solve(map<pair<int,int>, long long> &hash, string &record, int r_i, ve
     if (hash.find(make_pair(r_i, g_i)) != hash.end()) {
         return hash.find(make_pair(r_i, g_i))->second;
     }
-    long long ans = 0;
+    long ans = 0;
     int g = 0;
     while (r_i < record.size() && record[r_i] != '.') {
         char c = record[r_i];
@@ -64,7 +72,7 @@ int main() {
             }
         }
         springs = springs + "?" + springs + "?" + springs + "?" + springs + "?" + springs;
-        map<pair<int,int>, long long> hash;
+        unordered_map<pair<int,int>, long, PairHash> hash;
         ans += solve(hash, springs, 0, newgroups, 0);
     }
     cout << ans << endl;
