@@ -5,47 +5,43 @@
 
 using namespace std;
 
-long long solve(map<pair<string,vector<int>>, long long> &hash, string record, vector<int> groups) {
-    while (!record.empty() && record.back() == '.') {
-        record.pop_back();
+long long solve(map<pair<int,int>, long long> &hash, string &record, int r_i, vector<int> &groups, int g_i) {
+    while (r_i < record.size() && record[r_i] == '.') {
+        r_i++;
     }
-    if (record.empty()) {
-        return groups.empty() ? 1 : 0;
+    if (r_i == record.size()) {
+        return g_i == groups.size() ? 1 : 0;
     }
-    if (groups.empty()) {
-        while (!record.empty() && record.back() != '#') {
-            record.pop_back();
-        }        
-        return record.empty() ? 1 : 0;
+    if (g_i == groups.size()) {
+        while (r_i < record.size() && record[r_i] != '#') {
+            r_i++;
+        }
+        return r_i == record.size() ? 1 : 0;
     }
-    auto orecord = record;
-    auto ogroups = groups;
-    if (hash.find(make_pair(record, groups)) != hash.end()) {
-        return hash.find(make_pair(record, groups))->second;
+    auto or_i = r_i;
+    auto og_i = g_i;
+    if (hash.find(make_pair(r_i, g_i)) != hash.end()) {
+        return hash.find(make_pair(r_i, g_i))->second;
     }
     long long ans = 0;
     int g = 0;
-    while (!record.empty() && record.back() != '.') {
-        char c = record.back();
-        record.pop_back();
+    while (r_i < record.size() && record[r_i] != '.') {
+        char c = record[r_i];
+        r_i++;
         if (c == '?') {
-            if (g == groups.back()) {
-                vector<int> newgroups = groups;
-                newgroups.pop_back();
-                ans += solve(hash, record, newgroups);
+            if (g == groups[g_i]) {
+                ans += solve(hash, record, r_i, groups, g_i+1);
             }
             if (g == 0) {
-                ans += solve(hash, record, groups);
+                ans += solve(hash, record, r_i, groups, g_i);
             }
         }
         g++;
     }
-    if (g == groups.back()) {
-        vector<int> newgroups = groups;
-        newgroups.pop_back();
-        ans += solve(hash, record, newgroups);
+    if (g == groups[g_i]) {
+        ans += solve(hash, record, r_i, groups, g_i+1);
     }
-    hash[make_pair(orecord, ogroups)] = ans;
+    hash[make_pair(or_i, og_i)] = ans;
     return ans;
 }
 
@@ -68,8 +64,8 @@ int main() {
             }
         }
         springs = springs + "?" + springs + "?" + springs + "?" + springs + "?" + springs;
-        map<pair<string,vector<int>>, long long> hash;
-        ans += solve(hash, springs, newgroups);
+        map<pair<int,int>, long long> hash;
+        ans += solve(hash, springs, 0, newgroups, 0);
     }
     cout << ans << endl;
     return 0;
