@@ -40,6 +40,34 @@ void fallEast(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     }
 }
 
+// void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+//     int movingrows[gridsize+100];
+//     int startri = 0;
+//     int nrows = gridsize-1;
+//     int newnrows = 0;
+//     for (int i = 0; i < nrows; i++) {
+//         movingrows[i] = i;
+//     }
+//     while (nrows) {
+//         for (int ri = startri; ri < startri+nrows; ri++) {
+//             int i = movingrows[ri];
+//             __uint128_t tomove = rocks[i+1] & (~(rocks[i] | blocks[i])); // rocks in the lower row where I don't have a rock
+//             if (tomove != 0) {
+//                 rocks[i+1] ^= tomove;
+//                 rocks[i] |= tomove;
+//                 movingrows[startri+newnrows] = i-1;
+//                 newnrows++;
+//             }
+//         }
+//         if (movingrows[startri] == -1) {
+//             startri++;
+//             newnrows--;
+//         }
+//         nrows = newnrows;
+//         newnrows = 0;
+//     }
+// }
+
 void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     bool alldone;
     int starti = 0;
@@ -74,7 +102,7 @@ void fallSouth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
                 starti--;
             }
         }
-        min((gridsize-1),starti+1);
+        starti = min((gridsize-1),starti+1);
     } while(!alldone);
 }
 
@@ -101,8 +129,26 @@ void pprint(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     }
 }
 
+int solve(vector<__uint128_t> rocks, vector<__uint128_t> blocks) {
+    unordered_map<__uint128_t,int> hist;
+    unordered_map<int,int> weights;
+    int iter = 0;
+    __uint128_t lasthash = 0;
+    while (hist.find(lasthash) == hist.end()) {
+        auto [h,w] = cycle(rocks,blocks);
+        hist[lasthash] = iter;
+        lasthash = h;
+        weights[iter] = w;
+        iter++;
+    }
+    int cycstart = hist[lasthash];
+    int cyclen = iter - cycstart;
+    int leftover = (1000000000 - cycstart)%cyclen;
+    
+    return weights[cycstart+leftover-1];
+}
+
 int main() {
-    auto start_time = chrono::high_resolution_clock::now();
     ios_base::sync_with_stdio(false);
     string line;
     vector<__uint128_t> rocks;
@@ -125,25 +171,13 @@ int main() {
         blocks.push_back(b);
     }
 
-    unordered_map<__uint128_t,int> hist;
-    unordered_map<int,int> weights;
-    int iter = 0;
-    __uint128_t lasthash = 0;
-    while (hist.find(lasthash) == hist.end()) {
-        auto [h,w] = cycle(rocks,blocks);
-        hist[lasthash] = iter;
-        lasthash = h;
-        weights[iter] = w;
-        iter++;
+    auto start_time = chrono::high_resolution_clock::now();
+    for (int _ = 0; _ < 999; _++) {
+        solve(rocks,blocks);
     }
-    int cycstart = hist[lasthash];
-    int cyclen = iter - cycstart;
-    int leftover = (1000000000 - cycstart)%cyclen;
-    
-    cout << weights[cycstart+leftover-1] << endl;
-
+    cout << solve(rocks,blocks) << endl;
     auto end_time = chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    cout << "Execution Time: " << duration.count() << " microseconds" << std::endl;
+    cout << "Average Execution Time (1000 trials): " << duration.count()/1000 << " µs" << std::endl;
     return 0;
 }
