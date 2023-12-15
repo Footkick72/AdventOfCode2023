@@ -63,20 +63,28 @@ void cycle(vector<string> &grid) {
     rotate(grid);
 }
 
+int ghash(vector<string> &grid) {
+    int res = 0;
+    for (int i = 0; i < grid.size(); i++) {
+        res += hash<string>{}(grid[i])*7;
+    }
+    return res;
+}
+
 int main() {
     string line;
     vector<string> grid;
     while (getline(cin, line)) {
         grid.push_back(line);
     }
-    map<vector<string>,int> hist;
+    map<int,int> hist;
     int iter = 0;
-    while (hist.find(grid) == hist.end()) {
-        hist[grid] = iter;
+    while (hist.find(ghash(grid)) == hist.end()) {
+        hist[ghash(grid)] = iter;
         cycle(grid);
         iter++;
     }
-    int cycstart = hist[grid];
+    int cycstart = hist[ghash(grid)];
     int cyclen = iter - cycstart;
     int leftover = (1000000000 - cycstart)%cyclen;
     for (int _ = 0; _ < leftover; _++) cycle(grid);
