@@ -10,8 +10,11 @@ constexpr int gridsize = 100;
 // << is toward siginifance and also physically left
 // so the left wall is 100000... (1<<99)
 
+long long ineastwest = 0;
+long long innorthsouth = 0;
 // for speed, this function (the last in the cycle call) also computes the hash and the weight on the north beams
-pair<__uint128_t,int> fallWest(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+pair<__uint128_t,int> fallEast(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+    auto start_time = chrono::high_resolution_clock::now();
     __uint128_t hashval = 0;
     int northweight = 0;
 
@@ -26,11 +29,14 @@ pair<__uint128_t,int> fallWest(vector<__uint128_t> &rocks, vector<__uint128_t> &
         hashval *= 13;
         northweight += (gridsize-i)*(__builtin_popcountl(rocks[i]) + __builtin_popcountl(rocks[i]>>64));
     }
-    
+    auto end_time = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    ineastwest += duration.count();
     return make_pair(hashval, northweight);
 }
 
-void fallEast(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+void fallWest(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+    auto start_time = chrono::high_resolution_clock::now();
     __uint128_t tomove;
     for (int i = 0; i < gridsize; i++) {
         do {
@@ -38,37 +44,13 @@ void fallEast(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
             rocks[i] = (rocks[i] & ~tomove) | (tomove >> 1);
         } while (tomove != 0);
     }
+    auto end_time = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    ineastwest += duration.count();
 }
 
-// void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
-//     int movingrows[gridsize+100];
-//     int startri = 0;
-//     int nrows = gridsize-1;
-//     int newnrows = 0;
-//     for (int i = 0; i < nrows; i++) {
-//         movingrows[i] = i;
-//     }
-//     while (nrows) {
-//         for (int ri = startri; ri < startri+nrows; ri++) {
-//             int i = movingrows[ri];
-//             __uint128_t tomove = rocks[i+1] & (~(rocks[i] | blocks[i])); // rocks in the lower row where I don't have a rock
-//             if (tomove != 0) {
-//                 rocks[i+1] ^= tomove;
-//                 rocks[i] |= tomove;
-//                 movingrows[startri+newnrows] = i-1;
-//                 newnrows++;
-//             }
-//         }
-//         if (movingrows[startri] == -1) {
-//             startri++;
-//             newnrows--;
-//         }
-//         nrows = newnrows;
-//         newnrows = 0;
-//     }
-// }
-
 void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+    auto start_time = chrono::high_resolution_clock::now();
     bool alldone;
     int starti = 0;
     do {
@@ -85,9 +67,13 @@ void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
         }
         starti = max(0,starti-1);
     } while(!alldone);
+    auto end_time = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    innorthsouth += duration.count();
 }
 
 void fallSouth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
+    auto start_time = chrono::high_resolution_clock::now();
     bool alldone;
     int starti = (gridsize-1);
     do {
@@ -102,16 +88,19 @@ void fallSouth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
                 starti--;
             }
         }
-        starti = min((gridsize-1),starti+1);
+       starti = min((gridsize-1),starti+1);
     } while(!alldone);
+    auto end_time = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    innorthsouth += duration.count();
 }
 
 
 pair<__uint128_t,int> cycle(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     fallNorth(rocks,blocks);
-    fallEast(rocks,blocks);
+    fallWest(rocks,blocks);
     fallSouth(rocks,blocks);
-    return fallWest(rocks,blocks);
+    return fallEast(rocks,blocks);
 }
 
 void pprint(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
@@ -127,6 +116,7 @@ void pprint(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
         }
         cout << endl;
     }
+    cout << endl;
 }
 
 int solve(vector<__uint128_t> rocks, vector<__uint128_t> blocks) {
@@ -171,13 +161,16 @@ int main() {
         blocks.push_back(b);
     }
 
+    constexpr int ntrials = 1000;
     auto start_time = chrono::high_resolution_clock::now();
-    for (int _ = 0; _ < 999; _++) {
+    for (int _ = 0; _ < ntrials-1; _++) {
         solve(rocks,blocks);
     }
     cout << solve(rocks,blocks) << endl;
     auto end_time = chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    cout << "Average Execution Time (1000 trials): " << duration.count()/1000 << " µs" << std::endl;
+    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    cout << "Average Execution Time (" << ntrials << " trials): " << duration.count()/ntrials << " µs" << endl;
+    cout << "Average Time in E/W: " << ineastwest/ntrials << " µs" << endl;
+    cout << "Average Time in N/S: " << innorthsouth/ntrials << " µs" << endl;
     return 0;
 }
