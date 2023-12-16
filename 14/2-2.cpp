@@ -59,18 +59,23 @@ void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     auto start_time = chrono::high_resolution_clock::now();
     bool alldone;
     int starti = 0;
+    int endi = (gridsize-1);
+    int nendi = 0;
     do {
         alldone = true;
-        for (int i = starti; i < (gridsize-1); i++) {
+        for (int i = starti; i < endi; i++) {
             __uint128_t tomove = rocks[i+1] & (~(rocks[i] | blocks[i])); // rocks in the lower row where I don't have a rock
             if (tomove != 0) {
                 rocks[i+1] ^= tomove;
                 rocks[i] |= tomove;
                 alldone = false;
+                nendi = i;
             } else if (alldone) {
                 starti++;
             }
         }
+        endi = nendi;
+        nendi = 0;
         starti = max(0,starti-1);
     } while(!alldone);
     auto end_time = chrono::high_resolution_clock::now();
@@ -82,19 +87,24 @@ void fallSouth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     auto start_time = chrono::high_resolution_clock::now();
     bool alldone;
     int starti = (gridsize-1);
+    int endi = 0;
+    int nendi = (gridsize-1);
     do {
         alldone = true;
-        for (int i = (gridsize-1); i > 0; i--) {
+        for (int i = (gridsize-1); i > endi; i--) {
             __uint128_t tomove = rocks[i-1] & (~(rocks[i] | blocks[i])); // rocks in the higher row where I don't have a rock
             if (tomove != 0) {
                 rocks[i-1] ^= tomove;
                 rocks[i] |= tomove;
                 alldone = false;
+                nendi = i;
             } else if (alldone) {
                 starti--;
             }
         }
-       starti = min((gridsize-1),starti+1);
+        endi = nendi;
+        nendi = (gridsize-1);
+        starti = min((gridsize-1),starti+1);
     } while(!alldone);
     auto end_time = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
