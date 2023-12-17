@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <queue>
+#include <set>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
@@ -63,36 +63,42 @@ struct Heuristic {
     Heuristic(const unordered_map<State,int,StateHash> &d, const vector<vector<int>> &h) : dists(d), heuristic(h) {}
 
     bool operator()(const State &a, const State &b) const {
-        // return dists.at(a) + (maxi - a.i) + (maxj - a.j) > dists.at(b) + (maxi - b.i) + (maxj - b.j);
-        return dists.at(a) + heuristic[a.i][a.j] > dists.at(b) + heuristic[b.i][b.j];
+        auto d1 = dists.at(a) + heuristic[a.i][a.j];
+        auto d2 = dists.at(b) + heuristic[b.i][b.j];
+        if (d1 != d2) return d1 < d2;
+        return StateHash{}(a) < StateHash{}(b);
     }
 };
 
 int shortestPath(State start, vector<vector<int>> &grid, vector<vector<int>> &heuristic) {
     unordered_map<State,int,StateHash> dists;
     Heuristic h(dists, heuristic);
-    priority_queue<State, vector<State>, Heuristic> open(h);
+    set<State, Heuristic> open(h);
 
     State s1(start.i, start.j, start.straight, 0);
     State s2(start.i, start.j, start.straight, 1);
     dists[s1] = 0;
     dists[s2] = 0;
-    open.push(s1);
-    open.push(s2);
+    open.insert(s1);
+    open.insert(s2);
 
     while (!open.empty()) {
-        auto current = open.top();
+        auto current = *open.begin();
 
         if (current.i == maxi-1 && current.j == maxj-1 && current.straight >= 4) {
             return dists[current];
         }
-        open.pop();
+        open.erase(open.begin());
 
         for (auto opt : current.opts(grid)) {
             int tdist = dists[current] + opt.second;
-            if (dists.find(opt.first) == dists.end() || tdist < dists.at(opt.first)) {
+            if (dists.find(opt.first) == dists.end()) {
                 dists[opt.first] = tdist;
-                open.push(opt.first);
+                open.insert(opt.first);
+            } else if (tdist < dists.at(opt.first)) {
+                if (auto p = open.find(opt.first); p != open.end()) open.erase(p);
+                dists[opt.first] = tdist;
+                open.insert(opt.first);
             }
         }
     }
@@ -108,16 +114,19 @@ vector<vector<int>> revDijkstra(vector<vector<int>> &grid) {
         }
     }
     auto g = [&dists](const pair<int,int> &p1, const pair<int,int> &p2) {
-        return dists[p1.first][p1.second] > dists[p2.first][p2.second];
+        int d1 = dists[p1.first][p1.second];
+        int d2 = dists[p2.first][p2.second];
+        if (d1 != d2) return d1 < d2;
+        return p1 < p2;
     };
-    priority_queue<pair<int,int>, vector<pair<int,int>>, decltype(g)> open(g);
+    set<pair<int,int>,decltype(g)> open(g);
 
-    open.push({maxi-1, maxj-1});
+    open.insert({maxi-1, maxj-1});
     dists[maxi-1][maxj-1] = 0;
 
     while (!open.empty()) {
-        auto current = open.top();
-        open.pop();
+        auto current = *open.begin();
+        open.erase(open.begin());
 
         for (auto [di,dj] : array<array<int,2>,4>{{{0,1},{0,-1},{1,0},{-1,0}}}) {
             if (current.first + di >= 0 && current.first + di < maxi && current.second + dj >= 0 && current.second + dj < maxj) {
@@ -125,8 +134,9 @@ vector<vector<int>> revDijkstra(vector<vector<int>> &grid) {
                 int nj = current.second+dj;
                 int tdist = dists[current.first][current.second] + grid[ni][nj];
                 if (tdist < dists[ni][nj]) {
+                    if (auto p = open.find({ni,nj}); p != open.end()) open.erase(p);
                     dists[ni][nj] = tdist;
-                    open.push({ni,nj});
+                    open.insert({ni,nj});
                 }
             }
         }
