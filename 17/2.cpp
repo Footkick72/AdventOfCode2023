@@ -107,8 +107,8 @@ vector<vector<int>> revDijkstra(vector<vector<int>> &grid) {
             dists.back().emplace_back(INT_MAX);
         }
     }
-    auto g = [](const pair<int,int> &p1, const pair<int,int> &p2) {
-        return p1 > p2;
+    auto g = [&dists](const pair<int,int> &p1, const pair<int,int> &p2) {
+        return dists[p1.first][p1.second] > dists[p2.first][p2.second];
     };
     priority_queue<pair<int,int>, vector<pair<int,int>>, decltype(g)> open(g);
 
@@ -145,15 +145,12 @@ int main() {
     }
     maxi = grid.size();
     maxj = grid[0].size();
+
     auto start_time = chrono::high_resolution_clock::now();
     auto heuristic = revDijkstra(grid);
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    int djikstratime = duration.count();
     start_time = chrono::high_resolution_clock::now();
     cout << shortestPath({0,0,0,0},grid,heuristic) << endl;
-    end_time = chrono::high_resolution_clock::now();
-    duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    cout << djikstratime/1000.0 << " ms Djikstra Precompute" << endl;
-    cout << duration.count()/1000.0 << " ms A*" << endl;
+    auto end_time = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+    cout << duration.count()/1000.0 << " ms Total" << endl;
 }
