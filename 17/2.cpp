@@ -2,8 +2,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <unordered_map>
-#include <unordered_set>
 #include <algorithm>
 #include <chrono>
 
@@ -57,28 +55,39 @@ struct StateHash {
 };
 
 struct Heuristic {
-    const unordered_map<State,int,StateHash> &dists;
+    const vector<vector<array<array<int,11>,4>>> &dists;
     const vector<vector<int>> &heuristic;
 
-    Heuristic(const unordered_map<State,int,StateHash> &d, const vector<vector<int>> &h) : dists(d), heuristic(h) {}
+    Heuristic(const vector<vector<array<array<int,11>,4>>> &d, const vector<vector<int>> &h) : dists(d), heuristic(h) {}
 
     bool operator()(const State &a, const State &b) const {
-        auto d1 = dists.at(a) + heuristic[a.i][a.j];
-        auto d2 = dists.at(b) + heuristic[b.i][b.j];
+        auto d1 = dists[a.i][a.j][a.dir][a.straight] + heuristic[a.i][a.j];
+        auto d2 = dists[b.i][b.j][b.dir][b.straight] + heuristic[b.i][b.j];
         if (d1 != d2) return d1 < d2;
         return StateHash{}(a) < StateHash{}(b);
     }
 };
 
 int shortestPath(State start, vector<vector<int>> &grid, vector<vector<int>> &heuristic) {
-    unordered_map<State,int,StateHash> dists;
+    vector<vector<array<array<int,11>,4>>> dists;
+    for (int i = 0; i < maxi; i++) {
+        dists.emplace_back();
+        for (int j = 0; j < maxj; j++) {
+            dists.back().emplace_back();
+            for (int d = 0; d < 4; d++) {
+                for (int s = 0; s < 11; s++) {
+                    dists[i][j][d][s] = INT_MAX;
+                }
+            }
+        }
+    }
     Heuristic h(dists, heuristic);
     set<State, Heuristic> open(h);
 
     State s1(start.i, start.j, start.straight, 0);
     State s2(start.i, start.j, start.straight, 1);
-    dists[s1] = 0;
-    dists[s2] = 0;
+    dists[s1.i][s1.j][s1.dir][s1.straight] = 0;
+    dists[s2.i][s2.j][s2.dir][s2.straight] = 0;
     open.insert(s1);
     open.insert(s2);
 
@@ -86,18 +95,15 @@ int shortestPath(State start, vector<vector<int>> &grid, vector<vector<int>> &he
         auto current = *open.begin();
 
         if (current.i == maxi-1 && current.j == maxj-1 && current.straight >= 4) {
-            return dists[current];
+            return dists[current.i][current.j][current.dir][current.straight];
         }
         open.erase(open.begin());
 
         for (auto opt : current.opts(grid)) {
-            int tdist = dists[current] + opt.second;
-            if (dists.find(opt.first) == dists.end()) {
-                dists[opt.first] = tdist;
-                open.insert(opt.first);
-            } else if (tdist < dists.at(opt.first)) {
+            int tdist = dists[current.i][current.j][current.dir][current.straight] + opt.second;
+            if (tdist < dists[opt.first.i][opt.first.j][opt.first.dir][opt.first.straight]) {
                 if (auto p = open.find(opt.first); p != open.end()) open.erase(p);
-                dists[opt.first] = tdist;
+                dists[opt.first.i][opt.first.j][opt.first.dir][opt.first.straight] = tdist;
                 open.insert(opt.first);
             }
         }
