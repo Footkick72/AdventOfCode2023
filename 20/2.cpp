@@ -119,38 +119,36 @@ int main() {
         }
     }
 
-    long ans = 1;
-    for (auto c : contributers) {
-        cout << c << endl;
-        deque<tuple<string,string,bool>> pulses;
-        int a = 0;
-        bool run = true;
-        while (run) {
-            a++;
-            for (auto b : broadcast) pulses.emplace_back("broadcaster",b,false);
-            while (!pulses.empty()) {
-                auto [s,n,p] = pulses.front();
-                pulses.pop_front();
-                if (s == c && p) {
-                    run = false;
+    vector<int> answers(contributers.size(),0);
+    deque<tuple<string,string,bool>> pulses;
+    int a = 0;
+    bool run = true;
+    while (run) {
+        a++;
+        for (auto b : broadcast) pulses.emplace_back("broadcaster",b,false);
+        while (!pulses.empty()) {
+            auto [s,n,p] = pulses.front();
+            pulses.pop_front();
+            run = false;
+            for (int ci = 0; ci < contributers.size(); ci++) {
+                if (s == contributers[ci] && p) {
+                    answers[ci] = a;
                 }
+                if (answers[ci] == 0) run = true;
+            }
 
-                if (mods.find(n) == mods.end()) continue;
+            if (mods.find(n) == mods.end()) continue;
 
-                auto r = mods.at(n).get();
-                if (r->recieve_pulse(s,p)) {
-                    for (auto o : r->recipients) {
-                        pulses.emplace_back(n, o, r->get_output());
-                    }
+            auto r = mods.at(n).get();
+            if (r->recieve_pulse(s,p)) {
+                for (auto o : r->recipients) {
+                    pulses.emplace_back(n, o, r->get_output());
                 }
             }
         }
-        cout << a << endl;
-        ans *= a;
-        for (auto &[n,p] : mods) {
-            p.get()->reset();
-        }
     }
+    long ans = 1;
+    for (auto c : answers) ans *= c;
     cout << ans << endl;
     return 0;
 }
