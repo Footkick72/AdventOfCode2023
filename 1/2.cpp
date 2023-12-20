@@ -6,11 +6,10 @@
 int main() {
     using namespace std;
     
-    ifstream in("1/in.txt");
     string s;
     int ans = 0;
     deque<char> buff;
-    while (getline(in, s)) {
+    while (getline(cin, s)) {
         buff.clear();
         for (auto i = s.cbegin(); i != s.cend(); i++) {
             buff.push_back(*i);

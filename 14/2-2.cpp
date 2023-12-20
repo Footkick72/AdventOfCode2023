@@ -10,11 +10,11 @@ constexpr int gridsize = 100;
 // << is toward siginifance and also physically left
 // so the left wall is 100000... (1<<99)
 
-long long ineastwest = 0;
-long long innorthsouth = 0;
+// long long ineastwest = 0;
+// long long innorthsouth = 0;
 // for speed, this function (the last in the cycle call) also computes the hash and the weight on the north beams
 pair<__uint128_t,int> fallEast(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
-    auto start_time = chrono::high_resolution_clock::now();
+    // auto start_time = chrono::high_resolution_clock::now();
     __uint128_t hashval = 0;
     int northweight = 0;
 
@@ -31,14 +31,14 @@ pair<__uint128_t,int> fallEast(vector<__uint128_t> &rocks, vector<__uint128_t> &
         hashval *= 13;
         northweight += (gridsize-i)*(__builtin_popcountl(rocks[i]) + __builtin_popcountl(rocks[i]>>64));
     }
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    ineastwest += duration.count();
+    // auto end_time = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    // ineastwest += duration.count();
     return make_pair(hashval, northweight);
 }
 
 void fallWest(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
-    auto start_time = chrono::high_resolution_clock::now();
+    // auto start_time = chrono::high_resolution_clock::now();
     __uint128_t tomove;
     __uint128_t obst;
     constexpr __uint128_t lwall = (__uint128_t)1<<(gridsize-1);
@@ -50,13 +50,13 @@ void fallWest(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
             rocks[i] |= tomove << 1;
         } while (tomove != 0);
     }
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    ineastwest += duration.count();
+    // auto end_time = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    // ineastwest += duration.count();
 }
 
 void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
-    auto start_time = chrono::high_resolution_clock::now();
+    // auto start_time = chrono::high_resolution_clock::now();
     bool alldone;
     int starti = 0;
     int endi = (gridsize-1);
@@ -78,13 +78,13 @@ void fallNorth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
         nendi = 0;
         starti = max(0,starti-1);
     } while(!alldone);
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    innorthsouth += duration.count();
+    // auto end_time = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    // innorthsouth += duration.count();
 }
 
 void fallSouth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
-    auto start_time = chrono::high_resolution_clock::now();
+    // auto start_time = chrono::high_resolution_clock::now();
     bool alldone;
     int starti = (gridsize-1);
     int endi = 0;
@@ -106,13 +106,13 @@ void fallSouth(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
         nendi = (gridsize-1);
         starti = min((gridsize-1),starti+1);
     } while(!alldone);
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    innorthsouth += duration.count();
+    // auto end_time = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    // innorthsouth += duration.count();
 }
 
 
-long long solvetime = 0;
+// long long solvetime = 0;
 pair<__uint128_t,int> cycle(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
     fallNorth(rocks,blocks);
     fallWest(rocks,blocks);
@@ -137,18 +137,18 @@ void pprint(vector<__uint128_t> &rocks, vector<__uint128_t> &blocks) {
 }
 
 int solve(vector<__uint128_t> rocks, vector<__uint128_t> blocks) {
-    auto start_time = chrono::high_resolution_clock::now();
+    // auto start_time = chrono::high_resolution_clock::now();
 
     unordered_map<__uint128_t,int> hist;
     vector<int> weights;
     int iter = 0;
     __uint128_t lasthash = 0;
     while (hist.find(lasthash) == hist.end()) {
-        auto s = chrono::high_resolution_clock::now();
+        // auto s = chrono::high_resolution_clock::now();
         auto [h,w] = cycle(rocks,blocks);
-        auto e = chrono::high_resolution_clock::now();
-        auto d = chrono::duration_cast<std::chrono::microseconds>(e - s);
-        solvetime -= d.count();
+        // auto e = chrono::high_resolution_clock::now();
+        // auto d = chrono::duration_cast<std::chrono::microseconds>(e - s);
+        // solvetime -= d.count();
         hist[lasthash] = iter;
         lasthash = h;
         weights.push_back(w);
@@ -158,9 +158,9 @@ int solve(vector<__uint128_t> rocks, vector<__uint128_t> blocks) {
     int cyclen = iter - cycstart;
     int leftover = (1000000000 - cycstart)%cyclen;
 
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    solvetime += duration.count();
+    // auto end_time = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    // solvetime += duration.count();
     
     return weights[cycstart+leftover-1];
 }
@@ -188,18 +188,20 @@ int main() {
         blocks.push_back(b);
     }
 
-    constexpr int ntrials = 1000;
-    auto start_time = chrono::high_resolution_clock::now();
-    for (int _ = 0; _ < ntrials-1; _++) {
-        solve(rocks,blocks);
-    }
     cout << solve(rocks,blocks) << endl;
-    auto end_time = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    cout << "Average Execution Time (" << ntrials << " trials): " << duration.count()/(double)ntrials << " µs" << endl;
-    cout << "Average Time in E/W: " << ineastwest/(double)ntrials << " µs" << endl;
-    cout << "Average Time in N/S: " << innorthsouth/(double)ntrials << " µs" << endl;
-    cout << "Average Time in Solve: " << solvetime/(double)ntrials << " µs" << endl;
-    cout << "Average Time Unaccounted For: " << (duration.count()-solvetime-ineastwest-innorthsouth)/(double)ntrials << " µs" << endl;
+
+    // constexpr int ntrials = 1000;
+    // auto start_time = chrono::high_resolution_clock::now();
+    // for (int _ = 0; _ < ntrials-1; _++) {
+    //     solve(rocks,blocks);
+    // }
+    // cout << solve(rocks,blocks) << endl;
+    // auto end_time = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    // cout << "Average Execution Time (" << ntrials << " trials): " << duration.count()/(double)ntrials << " µs" << endl;
+    // cout << "Average Time in E/W: " << ineastwest/(double)ntrials << " µs" << endl;
+    // cout << "Average Time in N/S: " << innorthsouth/(double)ntrials << " µs" << endl;
+    // cout << "Average Time in Solve: " << solvetime/(double)ntrials << " µs" << endl;
+    // cout << "Average Time Unaccounted For: " << (duration.count()-solvetime-ineastwest-innorthsouth)/(double)ntrials << " µs" << endl;
     return 0;
 }

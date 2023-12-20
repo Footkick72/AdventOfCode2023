@@ -5,10 +5,9 @@
 using namespace std;
 
 int main() {
-    ifstream in("1/in.txt");
     string s;
     int ans = 0;
-    while (getline(in, s)) {
+    while (getline(cin, s)) {
         for (int i = 0; i < s.length(); i++) {
             if (isdigit(s[i])) {
                 ans += 10*(s[i]-'0');

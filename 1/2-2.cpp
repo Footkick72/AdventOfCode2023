@@ -6,7 +6,6 @@
 using namespace std;
 
 int main() {
-    ifstream in("1/in.txt");
     string s;
     int ans = 0;
     unordered_map<string, string> nums = {
@@ -20,7 +19,7 @@ int main() {
         {"eight", "ei8ht"},
         {"nine", "n9ne"}
     };
-    while (getline(in, s)) {
+    while (getline(cin, s)) {
         for (const auto &o : nums) {
             size_t pos = s.find(o.first);
             while (pos != string::npos) {
